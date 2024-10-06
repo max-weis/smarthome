@@ -1,0 +1,46 @@
+openapi: 3.0.3
+info:
+  title: Smart Home Device API
+  description: API to manage and retrieve smart home devices.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+paths:
+  /devices:
+    get:
+      summary: List all devices
+      description: Retrieve a list of all registered smart home devices.
+      responses:
+        '200':
+          description: A list of smart home devices.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+        '500':
+          description: Server error
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the device
+        name:
+          type: string
+          description: Human-readable name of the device
+        type:
+          type: string
+          description: Type of the smart device (e.g., light, thermostat)
+        status:
+          type: string
+          description: Current status of the device (e.g., on, off, idle)
+      required:
+        - id
+        - name
+        - type
+        - status

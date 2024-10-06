@@ -1,0 +1,5 @@
+package: device
+output: handler_gen.go
+generate:
+  echo-server: true
+  models: true
