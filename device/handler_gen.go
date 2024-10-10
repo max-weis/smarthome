@@ -4,8 +4,39 @@
 package device
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 )
+
+// Configuration defines model for Configuration.
+type Configuration struct {
+	// Active Whether the configuration is active or not
+	Active *bool `json:"active,omitempty"`
+
+	// Data Configuration data
+	Data map[string]interface{} `json:"data"`
+
+	// Id Unique identifier for the configuration
+	Id *string `json:"id,omitempty"`
+
+	// Name Human-readable name of the configuration
+	Name string `json:"name"`
+}
+
+// ConfigurationListItem defines model for ConfigurationListItem.
+type ConfigurationListItem struct {
+	// Active Whether the configuration is active or not
+	Active *bool `json:"active,omitempty"`
+
+	// Id Unique identifier for the configuration
+	Id *string `json:"id,omitempty"`
+
+	// Name Human-readable name of the configuration
+	Name string `json:"name"`
+}
 
 // Device defines model for Device.
 type Device struct {
@@ -22,8 +53,20 @@ type Device struct {
 	Type string `json:"type"`
 }
 
+// PostDeviceIdConfigurationsJSONRequestBody defines body for PostDeviceIdConfigurations for application/json ContentType.
+type PostDeviceIdConfigurationsJSONRequestBody = Configuration
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get device
+	// (GET /device/{id})
+	GetDeviceId(ctx echo.Context, id string) error
+	// Get device configurations
+	// (GET /device/{id}/configurations)
+	GetDeviceIdConfigurations(ctx echo.Context, id string) error
+	// Create device configuration
+	// (POST /device/{id}/configurations)
+	PostDeviceIdConfigurations(ctx echo.Context, id string) error
 	// List all devices
 	// (GET /devices)
 	GetDevices(ctx echo.Context) error
@@ -32,6 +75,54 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetDeviceId converts echo context to params.
+func (w *ServerInterfaceWrapper) GetDeviceId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetDeviceId(ctx, id)
+	return err
+}
+
+// GetDeviceIdConfigurations converts echo context to params.
+func (w *ServerInterfaceWrapper) GetDeviceIdConfigurations(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetDeviceIdConfigurations(ctx, id)
+	return err
+}
+
+// PostDeviceIdConfigurations converts echo context to params.
+func (w *ServerInterfaceWrapper) PostDeviceIdConfigurations(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostDeviceIdConfigurations(ctx, id)
+	return err
 }
 
 // GetDevices converts echo context to params.
@@ -71,6 +162,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.GET(baseURL+"/device/:id", wrapper.GetDeviceId)
+	router.GET(baseURL+"/device/:id/configurations", wrapper.GetDeviceIdConfigurations)
+	router.POST(baseURL+"/device/:id/configurations", wrapper.PostDeviceIdConfigurations)
 	router.GET(baseURL+"/devices", wrapper.GetDevices)
 
 }

@@ -3,25 +3,100 @@ info:
   title: Smart Home Device API
   description: API to manage and retrieve smart home devices.
   version: 1.0.0
+
 servers:
   - url: http://localhost:8080
     description: Local server
+
 paths:
   /devices:
     get:
       summary: List all devices
       description: Retrieve a list of all registered smart home devices.
       responses:
-        '200':
+        "200":
           description: A list of smart home devices.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Device'
-        '500':
+                  $ref: "#/components/schemas/Device"
+        "500":
           description: Server error
+
+  /device/{id}:
+    get:
+      summary: Get device
+      description: Retrieve a single device by its ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A single device.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "404":
+          description: Device not found
+        "500":
+          description: Server error
+
+  /device/{id}/configurations:
+    get:
+      summary: Get device configurations
+      description: Retrieve a list of configurations for a device.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of device configurations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConfigurationListItem"
+        "404":
+          description: Device not found
+        "500":
+          description: Server error
+    post:
+      summary: Create device configuration
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Device configuration to create
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Configuration"
+        required: true
+      responses:
+        "201":
+          description: Configuration created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+        "400":
+          description: Invalid configuration
+        "404":
+          description: Device not found
+
 components:
   schemas:
     Device:
@@ -44,3 +119,30 @@ components:
         - name
         - type
         - status
+
+    ConfigurationListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the configuration
+        name:
+          type: string
+          description: Human-readable name of the configuration
+        active:
+          type: boolean
+          description: Whether the configuration is active or not
+      required:
+        - name
+
+    Configuration:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ConfigurationListItem"
+        - type: object
+          properties:
+            data:
+              type: object
+              description: Configuration data
+          required:
+            - data
