@@ -21,8 +21,8 @@ CREATE TABLE configurations (
 );
 
 INSERT INTO configurations (id, device_id, name, active, data) VALUES
-('1', '1', 'Daymode', true, "{'brightness': 100}"),
-('2', '1', 'Nightmode', false, "{'brightness': 0}"),
-('3', '2', 'Evening', true, "{'brightness': 75, 'color_temp': 300}"),
-('4', '2', 'Morning', false, "{'brightness': 50, 'color_temp': 200}"),
-('5', '3', 'Nightmode', true, "{'brightness': 0}");
+("1", "1", "Daymode", true, '{"brightness": 100}'),
+("2", "1", "Nightmode", false, '{"brightness": 0}'),
+("3", "2", "Evening", true, '{"brightness": 75, "color_temp": 300}'),
+("4", "2", "Morning", false, '{"brightness": 50, "color_temp": 200}'),
+("5", "3", "Nightmode", true, '{"brightness": 0}');

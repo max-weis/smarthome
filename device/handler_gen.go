@@ -53,20 +53,29 @@ type Device struct {
 	Type string `json:"type"`
 }
 
-// PostDeviceIdConfigurationsJSONRequestBody defines body for PostDeviceIdConfigurations for application/json ContentType.
-type PostDeviceIdConfigurationsJSONRequestBody = Configuration
+// UpdateConfigurationJSONRequestBody defines body for UpdateConfiguration for application/json ContentType.
+type UpdateConfigurationJSONRequestBody = Configuration
+
+// CreateConfigurationJSONRequestBody defines body for CreateConfiguration for application/json ContentType.
+type CreateConfigurationJSONRequestBody = Configuration
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get device
 	// (GET /device/{id})
-	GetDeviceId(ctx echo.Context, id string) error
+	GetDevice(ctx echo.Context, id string) error
+	// Get device configuration
+	// (GET /device/{id}/configuration/{configurationId})
+	GetConfiguration(ctx echo.Context, id string, configurationId string) error
+	// Update device configuration
+	// (PUT /device/{id}/configuration/{configurationId})
+	UpdateConfiguration(ctx echo.Context, id string, configurationId string) error
 	// Get device configurations
 	// (GET /device/{id}/configurations)
-	GetDeviceIdConfigurations(ctx echo.Context, id string) error
+	GetDeviceConfigurations(ctx echo.Context, id string) error
 	// Create device configuration
 	// (POST /device/{id}/configurations)
-	PostDeviceIdConfigurations(ctx echo.Context, id string) error
+	CreateConfiguration(ctx echo.Context, id string) error
 	// List all devices
 	// (GET /devices)
 	GetDevices(ctx echo.Context) error
@@ -77,8 +86,8 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetDeviceId converts echo context to params.
-func (w *ServerInterfaceWrapper) GetDeviceId(ctx echo.Context) error {
+// GetDevice converts echo context to params.
+func (w *ServerInterfaceWrapper) GetDevice(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "id" -------------
 	var id string
@@ -89,12 +98,12 @@ func (w *ServerInterfaceWrapper) GetDeviceId(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetDeviceId(ctx, id)
+	err = w.Handler.GetDevice(ctx, id)
 	return err
 }
 
-// GetDeviceIdConfigurations converts echo context to params.
-func (w *ServerInterfaceWrapper) GetDeviceIdConfigurations(ctx echo.Context) error {
+// GetConfiguration converts echo context to params.
+func (w *ServerInterfaceWrapper) GetConfiguration(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "id" -------------
 	var id string
@@ -104,13 +113,45 @@ func (w *ServerInterfaceWrapper) GetDeviceIdConfigurations(ctx echo.Context) err
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
 	}
 
+	// ------------- Path parameter "configurationId" -------------
+	var configurationId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationId", ctx.Param("configurationId"), &configurationId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter configurationId: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetDeviceIdConfigurations(ctx, id)
+	err = w.Handler.GetConfiguration(ctx, id, configurationId)
 	return err
 }
 
-// PostDeviceIdConfigurations converts echo context to params.
-func (w *ServerInterfaceWrapper) PostDeviceIdConfigurations(ctx echo.Context) error {
+// UpdateConfiguration converts echo context to params.
+func (w *ServerInterfaceWrapper) UpdateConfiguration(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// ------------- Path parameter "configurationId" -------------
+	var configurationId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationId", ctx.Param("configurationId"), &configurationId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter configurationId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.UpdateConfiguration(ctx, id, configurationId)
+	return err
+}
+
+// GetDeviceConfigurations converts echo context to params.
+func (w *ServerInterfaceWrapper) GetDeviceConfigurations(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "id" -------------
 	var id string
@@ -121,7 +162,23 @@ func (w *ServerInterfaceWrapper) PostDeviceIdConfigurations(ctx echo.Context) er
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostDeviceIdConfigurations(ctx, id)
+	err = w.Handler.GetDeviceConfigurations(ctx, id)
+	return err
+}
+
+// CreateConfiguration converts echo context to params.
+func (w *ServerInterfaceWrapper) CreateConfiguration(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", ctx.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CreateConfiguration(ctx, id)
 	return err
 }
 
@@ -162,9 +219,11 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/device/:id", wrapper.GetDeviceId)
-	router.GET(baseURL+"/device/:id/configurations", wrapper.GetDeviceIdConfigurations)
-	router.POST(baseURL+"/device/:id/configurations", wrapper.PostDeviceIdConfigurations)
+	router.GET(baseURL+"/device/:id", wrapper.GetDevice)
+	router.GET(baseURL+"/device/:id/configuration/:configurationId", wrapper.GetConfiguration)
+	router.PUT(baseURL+"/device/:id/configuration/:configurationId", wrapper.UpdateConfiguration)
+	router.GET(baseURL+"/device/:id/configurations", wrapper.GetDeviceConfigurations)
+	router.POST(baseURL+"/device/:id/configurations", wrapper.CreateConfiguration)
 	router.GET(baseURL+"/devices", wrapper.GetDevices)
 
 }

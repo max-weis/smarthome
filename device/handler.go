@@ -2,9 +2,12 @@
 package device
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 )
 
 type Handler struct {
@@ -32,7 +35,7 @@ func (h *Handler) GetDevices(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, mapDevices(entities))
 }
 
-func (h *Handler) GetDeviceId(ctx echo.Context, id string) error {
+func (h *Handler) GetDevice(ctx echo.Context, id string) error {
 	entity, err := h.repository.GetDevice(id)
 	if err != nil {
 		return err
@@ -41,7 +44,7 @@ func (h *Handler) GetDeviceId(ctx echo.Context, id string) error {
 	return ctx.JSON(http.StatusOK, mapDevice(entity))
 }
 
-func mapDevices(devices []deviceEntity) []Device {
+func mapDevices(devices []DeviceEntity) []Device {
 	mappedDevices := make([]Device, len(devices))
 	for i, device := range devices {
 		mappedDevices[i] = mapDevice(device)
@@ -50,7 +53,7 @@ func mapDevices(devices []deviceEntity) []Device {
 	return mappedDevices
 }
 
-func mapDevice(device deviceEntity) Device {
+func mapDevice(device DeviceEntity) Device {
 	return Device{
 		Id:     device.ID,
 		Name:   device.Name,
@@ -59,7 +62,15 @@ func mapDevice(device deviceEntity) Device {
 	}
 }
 
-func (h *Handler) GetDeviceIdConfigurations(ctx echo.Context, id string) error {
+func (h *Handler) GetDeviceConfigurations(ctx echo.Context, id string) error {
+	if _, err := h.repository.GetDevice(id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ctx.NoContent(http.StatusNotFound)
+		}
+
+		return err
+	}
+
 	configurations, err := h.repository.ListConfigurations(id)
 	if err != nil {
 		return err
@@ -68,10 +79,10 @@ func (h *Handler) GetDeviceIdConfigurations(ctx echo.Context, id string) error {
 	return ctx.JSON(http.StatusOK, mapConfigurations(configurations))
 }
 
-func mapConfigurations(configurations []configurationEntity) []Configuration {
-	mappedConfigurations := make([]Configuration, len(configurations))
+func mapConfigurations(configurations []configurationEntity) []ConfigurationListItem {
+	mappedConfigurations := make([]ConfigurationListItem, len(configurations))
 	for i, configuration := range configurations {
-		mappedConfigurations[i] = Configuration{
+		mappedConfigurations[i] = ConfigurationListItem{
 			Id:     &configuration.ID,
 			Name:   configuration.Name,
 			Active: &configuration.Active,
@@ -81,20 +92,117 @@ func mapConfigurations(configurations []configurationEntity) []Configuration {
 	return mappedConfigurations
 }
 
-func (h *Handler) PostDeviceIdConfigurations(ctx echo.Context, id string) error {
+func (h *Handler) CreateConfiguration(ctx echo.Context, id string) error {
+	if _, err := h.repository.GetDevice(id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ctx.NoContent(http.StatusNotFound)
+		}
+
+		return err
+	}
+
 	var configuration Configuration
 	if err := ctx.Bind(&configuration); err != nil {
 		return err
 	}
 
-	if err := h.repository.CreateConfiguration(id, configuration.Name, configuration.Data); err != nil {
+	data, err := json.Marshal(configuration.Data)
+	if err != nil {
 		return err
 	}
 
-	return ctx.JSON(http.StatusCreated, Configuration{
-		Id:     configuration.Id,
+	newConfiguration, err := h.repository.CreateConfiguration(id, configuration.Name, data)
+	if err != nil {
+		return err
+	}
+
+	config, err := mapConfiguration(newConfiguration)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusCreated, config)
+}
+
+func (h *Handler) GetConfiguration(ctx echo.Context, id string, configurationId string) error {
+	if _, err := h.repository.GetDevice(id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ctx.NoContent(http.StatusNotFound)
+		}
+
+		return err
+	}
+
+	config, err := h.repository.GetConfiguration(configurationId)
+	if err != nil {
+		return err
+	}
+
+	configuration, err := mapConfiguration(config)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, configuration)
+}
+
+func mapConfiguration(configuration configurationEntity) (Configuration, error) {
+	var data map[string]any
+	if err := json.Unmarshal(configuration.Data, &data); err != nil {
+		return Configuration{}, err
+	}
+
+	return Configuration{
+		Id:     &configuration.ID,
 		Name:   configuration.Name,
-		Active: configuration.Active,
-		Data:   configuration.Data,
-	})
+		Active: &configuration.Active,
+		Data:   data,
+	}, nil
+}
+
+func (h *Handler) UpdateConfiguration(ctx echo.Context, id string, configurationId string) error {
+	if _, err := h.repository.GetDevice(id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ctx.NoContent(http.StatusNotFound)
+		}
+
+		return err
+	}
+
+	var newConfiguration Configuration
+	if err := ctx.Bind(&newConfiguration); err != nil {
+		return err
+	}
+
+	newDeviceEntity, err := mapToEntity(id, configurationId, newConfiguration)
+	if err != nil {
+		return err
+	}
+
+	config, err := h.repository.UpdateConfiguration(newDeviceEntity)
+	if err != nil {
+		return err
+	}
+
+	cfg, err := mapConfiguration(config)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, cfg)
+}
+
+func mapToEntity(deviceId, configId string, config Configuration) (configurationEntity, error) {
+	data, err := json.Marshal(config.Data)
+	if err != nil {
+		return configurationEntity{}, err
+	}
+
+	return configurationEntity{
+		ID:       configId,
+		DeviceID: deviceId,
+		Name:     config.Name,
+		Active:   *config.Active,
+		Data:     data,
+	}, nil
 }

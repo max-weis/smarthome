@@ -12,6 +12,7 @@ paths:
   /devices:
     get:
       summary: List all devices
+      operationId: getDevices
       description: Retrieve a list of all registered smart home devices.
       responses:
         "200":
@@ -28,6 +29,7 @@ paths:
   /device/{id}:
     get:
       summary: Get device
+      operationId: GetDevice
       description: Retrieve a single device by its ID.
       parameters:
         - in: path
@@ -50,6 +52,7 @@ paths:
   /device/{id}/configurations:
     get:
       summary: Get device configurations
+      operationId: GetDeviceConfigurations
       description: Retrieve a list of configurations for a device.
       parameters:
         - in: path
@@ -72,6 +75,7 @@ paths:
           description: Server error
     post:
       summary: Create device configuration
+      operationId: CreateConfiguration
       parameters:
         - in: path
           name: id
@@ -96,6 +100,70 @@ paths:
           description: Invalid configuration
         "404":
           description: Device not found
+
+
+  /device/{id}/configuration/{configurationId}:
+    get:
+      summary: Get device configuration
+      operationId: GetConfiguration
+      description: Retrieve a single configuration for a device.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: configurationId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A single configuration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+        "404":
+          description: Configuration or device not found
+        "500":
+          description: Server error
+    put:
+      summary: Update device configuration
+      operationId: UpdateConfiguration
+      description: Update a single configuration for a device.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: configurationId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Configuration"
+        required: true
+      responses:
+        "200":
+          description: Configuration updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+        "400":
+          description: Invalid configuration
+        "404":
+          description: Device not found
+        "500":
+          description: Server error
 
 components:
   schemas:
