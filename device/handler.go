@@ -4,10 +4,13 @@ package device
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
+
+	"github.com/max-weis/smarthome/internal"
 )
 
 type Handler struct {
@@ -63,11 +66,7 @@ func mapDevice(device DeviceEntity) Device {
 }
 
 func (h *Handler) GetDeviceConfigurations(ctx echo.Context, id string) error {
-	if _, err := h.repository.GetDevice(id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ctx.NoContent(http.StatusNotFound)
-		}
-
+	if _, err := h.findDevice(ctx, id); err != nil {
 		return err
 	}
 
@@ -93,11 +92,7 @@ func mapConfigurations(configurations []configurationEntity) []ConfigurationList
 }
 
 func (h *Handler) CreateConfiguration(ctx echo.Context, id string) error {
-	if _, err := h.repository.GetDevice(id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ctx.NoContent(http.StatusNotFound)
-		}
-
+	if _, err := h.findDevice(ctx, id); err != nil {
 		return err
 	}
 
@@ -125,11 +120,7 @@ func (h *Handler) CreateConfiguration(ctx echo.Context, id string) error {
 }
 
 func (h *Handler) GetConfiguration(ctx echo.Context, id string, configurationId string) error {
-	if _, err := h.repository.GetDevice(id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ctx.NoContent(http.StatusNotFound)
-		}
-
+	if _, err := h.findDevice(ctx, id); err != nil {
 		return err
 	}
 
@@ -161,11 +152,7 @@ func mapConfiguration(configuration configurationEntity) (Configuration, error) 
 }
 
 func (h *Handler) UpdateConfiguration(ctx echo.Context, id string, configurationId string) error {
-	if _, err := h.repository.GetDevice(id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ctx.NoContent(http.StatusNotFound)
-		}
-
+	if _, err := h.findDevice(ctx, id); err != nil {
 		return err
 	}
 
@@ -205,4 +192,17 @@ func mapToEntity(deviceId, configId string, config Configuration) (configuration
 		Active:   *config.Active,
 		Data:     data,
 	}, nil
+}
+
+func (h *Handler) findDevice(ctx echo.Context, id string) (*DeviceEntity, error) {
+	device, err := h.repository.GetDevice(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("%w: %w", internal.ErrNotFound, err)
+		}
+
+		return nil, fmt.Errorf("%w: %w", internal.ErrInternalServerError, err)
+	}
+
+	return &device, nil
 }
