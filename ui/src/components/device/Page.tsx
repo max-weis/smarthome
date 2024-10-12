@@ -5,9 +5,8 @@ import { TileView } from './TileView'
 import { TableView } from './TableView'
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { LayoutDashboard, Table } from 'lucide-react'
 
-export function DeviceList() {
+export function DevicePage() {
   const [devices, setDevices] = useState<Device[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -28,11 +27,6 @@ export function DeviceList() {
 
     fetchDevices()
   }, [])
-
-  const handleView = (device: Device) => {
-    console.log('View device:', device)
-    // Implement view functionality
-  }
 
   const handleEdit = (device: Device) => {
     console.log('Edit device:', device)
@@ -62,25 +56,21 @@ export function DeviceList() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Devices</h1>
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="view-toggle">
-            <Table className="h-6 w-6" />
-          </Label>
+        <h1 className="text-2xl font-bold">Smart Home Devices</h1>
+        <div className="flex items-center  space-x-2">
+          <Label htmlFor="view-toggle">Table View</Label>
           <Switch
             id="view-toggle"
             checked={isTileView}
             onCheckedChange={setIsTileView}
           />
-          <Label htmlFor="view-toggle">
-            <LayoutDashboard className="h-6 w-6" />
-          </Label>
+          <Label htmlFor="view-toggle">Tile View</Label>
         </div>
       </div>
       {isTileView ? (
-        <TileView devices={devices} onView={handleView} onEdit={handleEdit} />
+        <TileView devices={devices} onEdit={handleEdit} />
       ) : (
-        <TableView devices={devices} onView={handleView} onEdit={handleEdit} />
+        <TableView devices={devices} onEdit={handleEdit} />
       )}
     </div>
   )

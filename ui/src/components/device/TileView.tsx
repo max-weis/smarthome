@@ -10,14 +10,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Lightbulb, Thermometer, HelpCircle, MoreVertical, Eye, Edit, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useNavigate } from 'react-router-dom'
 
 interface TileViewProps {
     devices: Device[]
-    onView: (device: Device) => void
     onEdit: (device: Device) => void
 }
 
-export function TileView({ devices, onView, onEdit }: TileViewProps) {
+export function TileView({ devices, onEdit }: TileViewProps) {
+    const navigate = useNavigate()
+
     const getDeviceIcon = (type: string) => {
         switch (type.toLowerCase()) {
             case 'light':
@@ -60,7 +62,7 @@ export function TileView({ devices, onView, onEdit }: TileViewProps) {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => onView(device)}>
+                                    <DropdownMenuItem onClick={() => navigate(`/devices/${device.id}`)}>
                                         <Eye className="mr-2 h-4 w-4" />
                                         <span>View</span>
                                     </DropdownMenuItem>

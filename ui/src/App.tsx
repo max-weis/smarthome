@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
-import { DeviceList } from './components/device/DeviceList'
+import { DevicePage } from './components/device/Page'
+import { DeviceDetails } from './components/device/Details'
+import { ConfigurationDetail } from './components/device/configuration/Detail'
 
 function HomePage() {
   return (
@@ -17,7 +19,9 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/devices" element={<DeviceList />} />
+          <Route path="/devices" element={<DevicePage />} />
+          <Route path="/devices/:id" element={<DeviceDetails />} />
+          <Route path="/devices/:deviceId/configurations/:configId" element={<ConfigurationDetail />} />
         </Routes>
       </div>
     </Router>
