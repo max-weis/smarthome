@@ -45,7 +45,11 @@ export function ConfigurationList({
             </TableHeader>
             <TableBody>
                 {configurations.map((config) => (
-                    <TableRow key={config.id}>
+                    <TableRow
+                    key={config.id}
+                    className="bg-surface-mixed cursor-pointer"
+                    onClick={() => navigate(`/devices/${deviceId}/configurations/${config.id}`)}
+                  >
                         <TableCell className="font-medium">{config.name}</TableCell>
                         <TableCell>
                             <Button

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getSmartHomeDeviceAPI } from '../../../api/device-api'
-import { ConfigurationListItem } from '../../../api/device-api.schemas'
+import { ConfigurationListItem, Device } from '../../../api/device-api.schemas'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -12,10 +12,12 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from '../../ui/breadcrumb'
+import { JsonView } from './DataView'
 
 export function ConfigurationDetail() {
     const { deviceId, configId } = useParams<{ deviceId: string, configId: string }>()
     const [configuration, setConfiguration] = useState<ConfigurationListItem | null>(null)
+    const [device, setDevice] = useState<Device | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -34,6 +36,9 @@ export function ConfigurationDetail() {
                 }
                 setConfiguration(config)
                 setIsLoading(false)
+
+                const deviceResponse = await api.getDevice(deviceId)
+                setDevice(deviceResponse)
             } catch (err) {
                 console.error('Error fetching configuration details:', err)
                 setError('Failed to fetch configuration details. Please try again later.')
@@ -77,7 +82,7 @@ export function ConfigurationDetail() {
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
-                        <BreadcrumbLink href={`/devices/${deviceId}`}>Device Details</BreadcrumbLink>
+                        <BreadcrumbLink href={`/devices/${deviceId}`}>{device?.name}</BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
@@ -91,27 +96,33 @@ export function ConfigurationDetail() {
                     <CardTitle className="text-2xl font-bold">{configuration.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-4">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">ID</p>
-                            <p className="mt-1">{configuration.id}</p>
+                    <div className="flex flex-col lg:flex-row gap-8">
+                        <div className="flex-1 space-y-4">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">ID</p>
+                                <p className="mt-1">{configuration.id}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Status</p>
+                                <Badge
+                                    variant={configuration.active ? "default" : "secondary"}
+                                    className="mt-1"
+                                >
+                                    {configuration.active ? "Active" : "Inactive"}
+                                </Badge>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Value</p>
+                                <p className="mt-1">{configuration.value}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">Description</p>
+                                <p className="mt-1">{configuration.description || 'No description available'}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Status</p>
-                            <Badge
-                                variant={configuration.active ? "default" : "secondary"}
-                                className="mt-1"
-                            >
-                                {configuration.active ? "Active" : "Inactive"}
-                            </Badge>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Value</p>
-                            <p className="mt-1">{configuration.value}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Description</p>
-                            <p className="mt-1">{configuration.description || 'No description available'}</p>
+                        <div className="flex-1">
+                            <p className="text-sm font-medium text-muted-foreground mb-2">Configuration Data</p>
+                            <JsonView data={configuration.data} />
                         </div>
                     </div>
                 </CardContent>

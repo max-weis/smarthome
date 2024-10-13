@@ -38,7 +38,11 @@ export function TableView({ devices, onEdit }: TableViewProps) {
       </TableHeader>
       <TableBody>
         {devices.map((device) => (
-          <TableRow key={device.id}>
+          <TableRow
+            key={device.id}
+            className="bg-surface-mixed cursor-pointer"
+            onClick={() => navigate(`/devices/${device.id}`)}
+          >
             <TableCell className="font-medium">{device.name}</TableCell>
             <TableCell>
               <Badge variant="outline">{device.type}</Badge>

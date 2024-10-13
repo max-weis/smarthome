@@ -15,7 +15,6 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator
 } from '../ui/breadcrumb'
-import { Link } from 'react-router-dom'
 
 export function DeviceDetails() {
     const { id } = useParams<{ id: string }>()

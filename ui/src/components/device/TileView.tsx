@@ -47,7 +47,11 @@ export function TileView({ devices, onEdit }: TileViewProps) {
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {devices.map((device) => (
-                <Card key={device.id} className="bg-surface-mixed">
+                <Card
+                    key={device.id}
+                    className="bg-surface-mixed cursor-pointer"
+                    onClick={() => navigate(`/devices/${device.id}`)}
+                >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
                             {device.name}
