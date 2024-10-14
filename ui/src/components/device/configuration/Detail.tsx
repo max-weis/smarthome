@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getSmartHomeDeviceAPI } from '../../../api/device-api'
-import { ConfigurationListItem, Device } from '../../../api/device-api.schemas'
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Configuration, Device } from '../../../api/device-api.schemas'
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Edit, Save } from 'lucide-react'
 import {
     Breadcrumb,
     BreadcrumbList,
@@ -16,10 +21,12 @@ import { JsonView } from './DataView'
 
 export function ConfigurationDetail() {
     const { deviceId, configId } = useParams<{ deviceId: string, configId: string }>()
-    const [configuration, setConfiguration] = useState<ConfigurationListItem | null>(null)
+    const [configuration, setConfiguration] = useState<Configuration | null>(null)
     const [device, setDevice] = useState<Device | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [isEditing, setIsEditing] = useState(false)
+    const [editedConfig, setEditedConfig] = useState<Configuration>(configuration as Configuration)
 
     useEffect(() => {
         const fetchConfigurationDetails = async () => {
@@ -35,6 +42,7 @@ export function ConfigurationDetail() {
                     throw new Error('Configuration not found')
                 }
                 setConfiguration(config)
+                setEditedConfig(config)
                 setIsLoading(false)
 
                 const deviceResponse = await api.getDevice(deviceId)
@@ -48,6 +56,22 @@ export function ConfigurationDetail() {
 
         fetchConfigurationDetails()
     }, [deviceId, configId])
+
+    const handleSwitchChange = (checked: boolean) => {
+        setEditedConfig(prev => ({ ...prev, active: checked }))
+    }
+
+    const handleSave = async () => {
+        try {
+            const api = getSmartHomeDeviceAPI()
+            await api.updateConfiguration(deviceId!, configId!, editedConfig)
+            setConfiguration(editedConfig as Configuration)
+            setIsEditing(false)
+        } catch (err) {
+            console.error('Error updating configuration:', err)
+            setError('Failed to update configuration. Please try again.')
+        }
+    }
 
     if (isLoading) {
         return (
@@ -92,40 +116,63 @@ export function ConfigurationDetail() {
             </Breadcrumb>
 
             <Card className="bg-surface-mixed mt-4">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-2xl font-bold">{configuration.name}</CardTitle>
+                    <Button onClick={() => setIsEditing(!isEditing)} variant="outline">
+                        {isEditing ? (
+                            <>
+                                Cancel
+                                <Edit className="ml-2 h-4 w-4" />
+                            </>
+                        ) : (
+                            <>
+                                Edit
+                                <Edit className="ml-2 h-4 w-4" />
+                            </>
+                        )}
+                    </Button>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col lg:flex-row gap-8">
                         <div className="flex-1 space-y-4">
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">ID</p>
+                                <Label htmlFor="id">ID</Label>
                                 <p className="mt-1">{configuration.id}</p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-muted-foreground">Status</p>
-                                <Badge
-                                    variant={configuration.active ? "default" : "secondary"}
-                                    className="mt-1"
-                                >
-                                    {configuration.active ? "Active" : "Inactive"}
-                                </Badge>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">Value</p>
-                                <p className="mt-1">{configuration.value}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">Description</p>
-                                <p className="mt-1">{configuration.description || 'No description available'}</p>
+                                <Label htmlFor="status">Status</Label>
+                                <div className="flex items-center space-x-2 mt-1">
+                                    {isEditing ? (
+                                        <Switch
+                                            id="status"
+                                            checked={editedConfig.active}
+                                            onCheckedChange={handleSwitchChange}
+                                        />
+                                    ) : null}
+                                    <Badge
+                                        variant={(isEditing ? editedConfig.active : configuration.active) ? "default" : "secondary"}
+                                    >
+                                        {(isEditing ? editedConfig.active : configuration.active) ? "Active" : "Inactive"}
+                                    </Badge>
+                                </div>
                             </div>
                         </div>
                         <div className="flex-1">
-                            <p className="text-sm font-medium text-muted-foreground mb-2">Configuration Data</p>
-                            <JsonView data={configuration.data} />
+                            <Label>Configuration Data</Label>
+                            <div className="mt-1">
+                                <JsonView data={configuration.data} />
+                            </div>
                         </div>
                     </div>
                 </CardContent>
+                {isEditing && (
+                    <CardFooter>
+                        <Button onClick={handleSave}>
+                            Save Changes
+                            <Save className="ml-2 h-4 w-4" />
+                        </Button>
+                    </CardFooter>
+                )}
             </Card>
         </div>
     )
