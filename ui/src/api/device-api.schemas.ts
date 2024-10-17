@@ -17,9 +17,9 @@ export type ConfigurationAllOf = {
 
 export interface ConfigurationListItem {
   /** Whether the configuration is active or not */
-  active?: boolean;
+  active: boolean;
   /** Unique identifier for the configuration */
-  id?: string;
+  id: string;
   /** Human-readable name of the configuration */
   name: string;
 }

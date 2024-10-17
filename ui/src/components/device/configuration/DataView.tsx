@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { cn } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -9,11 +9,15 @@ interface JsonViewProps {
 }
 
 function JsonViewRaw({ data, level = 0 }: JsonViewProps) {
-  if (typeof data !== 'object' || data === null) {
-    return <span className="text-green-500">{JSON.stringify(data)}</span>
+  if (data === null || data === undefined) {
+    return <span className="text-red-500">null</span>;
   }
 
-  const isArray = Array.isArray(data)
+  if (typeof data !== 'object') {
+    return <span className="text-green-500">{JSON.stringify(data)}</span>;
+  }
+
+  const isArray = Array.isArray(data);
 
   return (
     <div style={{ marginLeft: `${level * 20}px` }}>
@@ -28,15 +32,26 @@ function JsonViewRaw({ data, level = 0 }: JsonViewProps) {
       ))}
       {isArray ? ']' : '}'}
     </div>
-  )
+  );
 }
 
 function HumanReadableView({ data }: { data: any }) {
+  if (data === null || data === undefined) {
+    return <span className="text-red-500">null</span>;
+  }
+
+  if (typeof data !== 'object') {
+    return <span className="text-green-500">{JSON.stringify(data)}</span>;
+  }
+
   const renderValue = (value: any) => {
-    if (typeof value === 'object' && value !== null) {
-      return JSON.stringify(value)
+    if (value === null || value === undefined) {
+      return <span className="text-red-500">null</span>;
     }
-    return String(value)
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    return String(value);
   }
 
   return (
@@ -48,11 +63,19 @@ function HumanReadableView({ data }: { data: any }) {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export function JsonView({ data }: JsonViewProps) {
-  const [isJsonView, setIsJsonView] = useState(false)
+  const [isJsonView, setIsJsonView] = useState(false);
+
+  if (data === null || data === undefined) {
+    return (
+      <div className="bg-muted p-4 rounded-md overflow-x-auto">
+        <span className="text-red-500">null</span>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -68,5 +91,5 @@ export function JsonView({ data }: JsonViewProps) {
         {isJsonView ? <JsonViewRaw data={data} /> : <HumanReadableView data={data} />}
       </div>
     </div>
-  )
+  );
 }

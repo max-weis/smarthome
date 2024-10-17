@@ -101,7 +101,6 @@ paths:
         "404":
           description: Device not found
 
-
   /device/{id}/configuration/{configurationId}:
     get:
       summary: Get device configuration
@@ -201,7 +200,9 @@ components:
           type: boolean
           description: Whether the configuration is active or not
       required:
+        - id
         - name
+        - active
 
     Configuration:
       type: object
