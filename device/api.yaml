@@ -213,5 +213,3 @@ components:
             data:
               type: object
               description: Configuration data
-          required:
-            - data

@@ -20,7 +20,6 @@ import { MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react'
 interface ConfigurationListProps {
     deviceId: string
     configurations: ConfigurationListItem[]
-    toggleConfigurationActive: (configId: string) => void
     onUpdateConfiguration: (configId: string) => void
     onDeleteConfiguration: (configId: string) => void
 }
@@ -28,7 +27,6 @@ interface ConfigurationListProps {
 export function ConfigurationList({
     deviceId,
     configurations,
-    toggleConfigurationActive,
     onUpdateConfiguration,
     onDeleteConfiguration
 }: ConfigurationListProps) {
@@ -46,15 +44,16 @@ export function ConfigurationList({
             <TableBody>
                 {configurations.map((config) => (
                     <TableRow
-                    key={config.id}
-                    className="bg-surface-mixed cursor-pointer"
-                    onClick={() => navigate(`/devices/${deviceId}/configurations/${config.id}`)}
-                  >
+                        key={config.id}
+                        className="bg-surface-mixed cursor-pointer"
+                        onClick={() => navigate(`/devices/${deviceId}/configurations/${config.id}`)}
+                    >
                         <TableCell className="font-medium">{config.name}</TableCell>
                         <TableCell>
                             <Button
                                 variant={config.active ? "default" : "secondary"}
                                 size="sm"
+                                // TODO: implement toggle
                                 onClick={() => toggleConfigurationActive(config.id)}
                             >
                                 {config.active ? "Active" : "Inactive"}

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Edit } from 'lucide-react'
 import { JsonView } from './DataView'
-import { Breadcrumbs } from './Breadcrumb'
+import { Breadcrumbs } from './Breadcrumbs'
 import { UpdateModal } from './UpdateModal'
 
 export function ConfigurationDetail() {

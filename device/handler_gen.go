@@ -14,13 +14,13 @@ import (
 // Configuration defines model for Configuration.
 type Configuration struct {
 	// Active Whether the configuration is active or not
-	Active *bool `json:"active,omitempty"`
+	Active bool `json:"active"`
 
 	// Data Configuration data
-	Data map[string]interface{} `json:"data"`
+	Data *map[string]interface{} `json:"data,omitempty"`
 
 	// Id Unique identifier for the configuration
-	Id *string `json:"id,omitempty"`
+	Id string `json:"id"`
 
 	// Name Human-readable name of the configuration
 	Name string `json:"name"`
@@ -29,10 +29,10 @@ type Configuration struct {
 // ConfigurationListItem defines model for ConfigurationListItem.
 type ConfigurationListItem struct {
 	// Active Whether the configuration is active or not
-	Active *bool `json:"active,omitempty"`
+	Active bool `json:"active"`
 
 	// Id Unique identifier for the configuration
-	Id *string `json:"id,omitempty"`
+	Id string `json:"id"`
 
 	// Name Human-readable name of the configuration
 	Name string `json:"name"`

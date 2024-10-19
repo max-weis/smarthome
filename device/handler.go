@@ -16,9 +16,10 @@ import (
 type Handler struct {
 	e          *echo.Echo
 	repository Repository
+	producer   *Producer
 }
 
-func NewHandler(e *echo.Echo, repository Repository) ServerInterface {
+func NewHandler(e *echo.Echo, repository Repository, producer *Producer) ServerInterface {
 	handler := &Handler{
 		e:          e,
 		repository: repository,
@@ -82,9 +83,9 @@ func mapConfigurations(configurations []configurationEntity) []ConfigurationList
 	mappedConfigurations := make([]ConfigurationListItem, len(configurations))
 	for i, configuration := range configurations {
 		mappedConfigurations[i] = ConfigurationListItem{
-			Id:     &configuration.ID,
+			Id:     configuration.ID,
 			Name:   configuration.Name,
-			Active: &configuration.Active,
+			Active: configuration.Active,
 		}
 	}
 
@@ -144,10 +145,10 @@ func mapConfiguration(configuration configurationEntity) (Configuration, error) 
 	}
 
 	return Configuration{
-		Id:     &configuration.ID,
+		Id:     configuration.ID,
 		Name:   configuration.Name,
-		Active: &configuration.Active,
-		Data:   data,
+		Active: configuration.Active,
+		Data:   &data,
 	}, nil
 }
 
@@ -166,6 +167,15 @@ func (h *Handler) UpdateConfiguration(ctx echo.Context, id string, configuration
 		return err
 	}
 
+	if newDeviceEntity.Active {
+		// check if device is active and set all configurations inactive,
+		// but only if the new configuration is active. So the device state can be
+		// updated to only one configuration at a time.
+		if err := h.repository.SetAllInactive(id); err != nil {
+			return err
+		}
+	}
+
 	config, err := h.repository.UpdateConfiguration(newDeviceEntity)
 	if err != nil {
 		return err
@@ -174,6 +184,12 @@ func (h *Handler) UpdateConfiguration(ctx echo.Context, id string, configuration
 	cfg, err := mapConfiguration(config)
 	if err != nil {
 		return err
+	}
+
+	if config.Active {
+		if err := h.producer.PublishConfiguration(id, config.ID, cfg.Data); err != nil {
+			return err
+		}
 	}
 
 	return ctx.JSON(http.StatusOK, cfg)
@@ -189,7 +205,7 @@ func mapToEntity(deviceId, configId string, config Configuration) (configuration
 		ID:       configId,
 		DeviceID: deviceId,
 		Name:     config.Name,
-		Active:   *config.Active,
+		Active:   config.Active,
 		Data:     data,
 	}, nil
 }

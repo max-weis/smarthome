@@ -1,20 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getSmartHomeDeviceAPI } from '../../api/device-api'
-import { ConfigurationListItem, Device } from '../../api/device-api.schemas'
+import { Configuration, ConfigurationListItem, Device } from '../../api/device-api.schemas'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Lightbulb, Thermometer, HelpCircle } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { Lightbulb, Thermometer, HelpCircle, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ConfigurationList } from './configuration/List'
-import {
-    Breadcrumb,
-    BreadcrumbList,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbPage,
-    BreadcrumbSeparator
-} from '../ui/breadcrumb'
+import { Breadcrumbs } from './Breadcrumbs'
+import { CreateModal } from './configuration/CreateModal'
 
 export function DeviceDetails() {
     const { id } = useParams<{ id: string }>()
@@ -22,6 +17,7 @@ export function DeviceDetails() {
     const [configurations, setConfigurations] = useState<ConfigurationListItem[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
     useEffect(() => {
         const fetchDeviceAndConfigurations = async () => {
@@ -55,30 +51,17 @@ export function DeviceDetails() {
         }
     }
 
-    const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
-            case 'on':
-                return 'bg-green-500'
-            case 'off':
-                return 'bg-red-500'
-            case 'idle':
-                return 'bg-yellow-500'
-            default:
-                return 'bg-gray-500'
-        }
-    }
-
-    const toggleConfigurationActive = (configId: string) => {
-        // TODO: Implement this
-        console.log(`Toggle configuration ${configId}`)
-    }
-
     const handleUpdateConfiguration = (configId: string) => {
         console.log(`Update configuration ${configId}`)
     }
 
     const handleDeleteConfiguration = (configId: string) => {
         console.log(`Delete configuration ${configId}`)
+    }
+
+    const handleCreateConfiguration = (newConfig: ConfigurationListItem) => {
+        setConfigurations([...configurations, newConfig])
+        setIsCreateModalOpen(false)
     }
 
     if (isLoading) {
@@ -103,21 +86,7 @@ export function DeviceDetails() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <Breadcrumb>
-                <BreadcrumbList>
-                    <BreadcrumbItem>
-                        <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                        <BreadcrumbLink href="/devices">Devices</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                        <BreadcrumbPage>{device.name}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                </BreadcrumbList>
-            </Breadcrumb>
+            <Breadcrumbs deviceName={device.name} />
 
             <Card className="bg-surface-mixed mb-8 mt-4">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -137,7 +106,6 @@ export function DeviceDetails() {
                             <div className="flex items-center mt-1">
                                 <div className={cn(
                                     "h-3 w-3 rounded-full mr-2",
-                                    getStatusColor(device.status)
                                 )} />
                                 {device.status}
                             </div>
@@ -151,19 +119,29 @@ export function DeviceDetails() {
             </Card>
 
             <Card className="bg-surface-mixed">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
                     <CardTitle>Device Configurations</CardTitle>
+                    <Button onClick={() => setIsCreateModalOpen(true)} variant="outline" size="sm">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Configuration
+                    </Button>
                 </CardHeader>
                 <CardContent>
                     <ConfigurationList
                         deviceId={device.id}
                         configurations={configurations}
-                        toggleConfigurationActive={toggleConfigurationActive}
                         onUpdateConfiguration={handleUpdateConfiguration}
                         onDeleteConfiguration={handleDeleteConfiguration}
                     />
                 </CardContent>
             </Card>
+
+            <CreateModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                deviceId={device.id}
+                onCreateSuccess={handleCreateConfiguration}
+            />
         </div>
     )
 }

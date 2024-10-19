@@ -24,7 +24,8 @@ func Initialize() (*AppContext, error) {
 	repository := device.NewRepository(db)
 	client := internal.NewMqttClient()
 	consumer := device.NewConsumer(logger, repository, client)
-	serverInterface := device.NewHandler(echo, repository)
+	producer := device.NewProducer(logger, client)
+	serverInterface := device.NewHandler(echo, repository, producer)
 	appContext := &AppContext{
 		echo:           echo,
 		deviceConsumer: consumer,

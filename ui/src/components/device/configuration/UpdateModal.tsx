@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Configuration } from '../../../api/device-api.schemas'
 import { getSmartHomeDeviceAPI } from '../../../api/device-api'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Save } from 'lucide-react'
 
 interface UpdateConfigurationModalProps {
@@ -26,6 +27,10 @@ export function UpdateModal({
     const [editedConfig, setEditedConfig] = useState<Configuration>(configuration)
     const [error, setError] = useState<string | null>(null)
 
+    useEffect(() => {
+        setEditedConfig(configuration)
+    }, [configuration])
+
     const handleSwitchChange = (checked: boolean) => {
         setEditedConfig(prev => ({ ...prev, active: checked }))
     }
@@ -45,6 +50,7 @@ export function UpdateModal({
             const api = getSmartHomeDeviceAPI()
             await api.updateConfiguration(deviceId, configuration.id, editedConfig)
             onUpdateSuccess(editedConfig)
+            onClose()
         } catch (err) {
             console.error('Error updating configuration:', err)
             setError('Failed to update configuration. Please try again.')
@@ -62,7 +68,7 @@ export function UpdateModal({
                         <Label htmlFor="name" className="text-right">
                             Name
                         </Label>
-                        <input
+                        <Input
                             id="name"
                             value={editedConfig.name}
                             onChange={(e) => setEditedConfig(prev => ({ ...prev, name: e.target.value }))}

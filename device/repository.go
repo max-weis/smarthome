@@ -113,10 +113,10 @@ func (r *Repository) GetConfiguration(id string) (configurationEntity, error) {
 	return configuration, nil
 }
 
-// TODO: doesnt work :(
 func (r *Repository) UpdateConfiguration(config configurationEntity) (configurationEntity, error) {
 	onConflict := clause.OnConflict{
-		Columns: []clause.Column{{Name: "id"}},
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"Name", "Active", "Data"}),
 	}
 
 	if err := r.db.Clauses(onConflict).Create(&config).Error; err != nil {
@@ -124,4 +124,8 @@ func (r *Repository) UpdateConfiguration(config configurationEntity) (configurat
 	}
 
 	return config, nil
+}
+
+func (r *Repository) SetAllInactive(deviceId string) error {
+	return r.db.Model(&configurationEntity{}).Where("device_id = ?", deviceId).Update("active", false).Error
 }
