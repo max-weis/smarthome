@@ -187,7 +187,7 @@ func (h *Handler) UpdateConfiguration(ctx echo.Context, id string, configuration
 	}
 
 	if config.Active {
-		if err := h.producer.PublishConfiguration(id, config.ID, cfg.Data); err != nil {
+		if err := h.producer.PublishConfiguration(id, config.ID, *cfg.Data); err != nil {
 			return err
 		}
 	}

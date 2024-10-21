@@ -32,6 +32,10 @@ export function ConfigurationList({
 }: ConfigurationListProps) {
     const navigate = useNavigate()
 
+    function toggleConfigurationActive(id: string): void {
+        throw new Error('Function not implemented.')
+    }
+
     return (
         <Table>
             <TableHeader>
