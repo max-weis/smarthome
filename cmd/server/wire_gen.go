@@ -16,15 +16,14 @@ import (
 
 func Initialize() (*AppContext, error) {
 	echo := internal.NewEchoServer()
-	logger := internal.NewLogger()
 	db, err := internal.NewDatabase()
 	if err != nil {
 		return nil, err
 	}
 	repository := device.NewRepository(db)
 	client := internal.NewMqttClient()
-	consumer := device.NewConsumer(logger, repository, client)
-	producer := device.NewProducer(logger, client)
+	consumer := device.NewConsumer(repository, client)
+	producer := device.NewProducer(client)
 	serverInterface := device.NewHandler(echo, repository, producer)
 	appContext := &AppContext{
 		echo:           echo,

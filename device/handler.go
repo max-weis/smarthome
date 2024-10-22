@@ -23,6 +23,7 @@ func NewHandler(e *echo.Echo, repository Repository, producer *Producer) ServerI
 	handler := &Handler{
 		e:          e,
 		repository: repository,
+		producer:   producer,
 	}
 
 	RegisterHandlers(e, handler)
@@ -221,4 +222,20 @@ func (h *Handler) findDevice(ctx echo.Context, id string) (*DeviceEntity, error)
 	}
 
 	return &device, nil
+}
+
+func (h *Handler) ToggleConfigurationStatus(ctx echo.Context, id string, configurationId string) error {
+	if _, err := h.findDevice(ctx, id); err != nil {
+		return err
+	}
+
+	if err := h.repository.SetAllInactive(id); err != nil {
+		return err
+	}
+
+	if err := h.repository.ToggleConfigurationStatus(configurationId); err != nil {
+		return err
+	}
+
+	return ctx.NoContent(http.StatusNoContent)
 }

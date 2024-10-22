@@ -2,12 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch main",
+            "name": "Smarthome",
             "type": "go",
             "request": "launch",
-            "mode": "auto",
-            "program": "${file}",
-            "args": []
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/server",
+            "env": {},
+            "buildFlags": "-gcflags=all=-N"
         }
     ]
 }

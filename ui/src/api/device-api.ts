@@ -80,6 +80,16 @@ export const getSmartHomeDeviceAPI = () => {
     });
   };
 
+  /**
+   * @summary Toggle device configuration status
+   */
+  const toggleConfigurationStatus = (id: string, configurationId: string) => {
+    return customInstance<void>({
+      url: `/device/${id}/configuration/${configurationId}/status`,
+      method: "POST",
+    });
+  };
+
   return {
     getDevices,
     getDevice,
@@ -87,6 +97,7 @@ export const getSmartHomeDeviceAPI = () => {
     createConfiguration,
     getConfiguration,
     updateConfiguration,
+    toggleConfigurationStatus,
   };
 };
 export type GetDevicesResult = NonNullable<
@@ -115,5 +126,12 @@ export type GetConfigurationResult = NonNullable<
 export type UpdateConfigurationResult = NonNullable<
   Awaited<
     ReturnType<ReturnType<typeof getSmartHomeDeviceAPI>["updateConfiguration"]>
+  >
+>;
+export type ToggleConfigurationStatusResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getSmartHomeDeviceAPI>["toggleConfigurationStatus"]
+    >
   >
 >;

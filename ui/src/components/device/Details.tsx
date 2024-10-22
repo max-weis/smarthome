@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getSmartHomeDeviceAPI } from '../../api/device-api'
-import { Configuration, ConfigurationListItem, Device } from '../../api/device-api.schemas'
+import { ConfigurationListItem, Device } from '../../api/device-api.schemas'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

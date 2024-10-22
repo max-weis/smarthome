@@ -89,6 +89,7 @@ func (r *Repository) CreateConfiguration(deviceId string, name string, data json
 		ID:       uuid.New().String(),
 		DeviceID: deviceId,
 		Name:     name,
+		Active:   false,
 		Data:     datatypes.JSON(data),
 	}
 
@@ -127,5 +128,15 @@ func (r *Repository) UpdateConfiguration(config configurationEntity) (configurat
 }
 
 func (r *Repository) SetAllInactive(deviceId string) error {
-	return r.db.Model(&configurationEntity{}).Where("device_id = ?", deviceId).Update("active", false).Error
+	return r.db.Model(&configurationEntity{}).
+		Where("device_id = ?", deviceId).
+		Update("active", false).Error
+}
+
+func (r *Repository) ToggleConfigurationStatus(configId string) error {
+	result := r.db.Model(&configurationEntity{}).
+		Where("id = ?", configId).
+		Update("active", gorm.Expr("NOT active"))
+
+	return result.Error
 }

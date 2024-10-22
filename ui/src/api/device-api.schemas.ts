@@ -12,7 +12,7 @@ export type ConfigurationAllOfData = { [key: string]: unknown };
 
 export type ConfigurationAllOf = {
   /** Configuration data */
-  data: ConfigurationAllOfData;
+  data?: ConfigurationAllOfData;
 };
 
 export interface ConfigurationListItem {

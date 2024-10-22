@@ -1,25 +1,18 @@
-import { useNavigate } from 'react-router-dom'
-import { ConfigurationListItem } from '../../../api/device-api.schemas'
+import { useState } from 'react'
+import { ConfigurationListItem as ConfigItem } from '../../../api/device-api.schemas'
 import {
     Table,
     TableBody,
-    TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react'
+import { ConfigurationListItem } from './ListItem'
+import { getSmartHomeDeviceAPI } from '@/api/device-api'
 
 interface ConfigurationListProps {
     deviceId: string
-    configurations: ConfigurationListItem[]
+    configurations: ConfigItem[]
     onUpdateConfiguration: (configId: string) => void
     onDeleteConfiguration: (configId: string) => void
 }
@@ -28,12 +21,20 @@ export function ConfigurationList({
     deviceId,
     configurations,
     onUpdateConfiguration,
-    onDeleteConfiguration
+    onDeleteConfiguration,
 }: ConfigurationListProps) {
-    const navigate = useNavigate()
+    const [activeConfigId, setActiveConfigId] = useState<string | null>(
+        configurations.find(config => config.active)?.id || null
+    )
 
-    function toggleConfigurationActive(id: string): void {
-        throw new Error('Function not implemented.')
+    const handleToggle = async (configId: string) => {
+        try {
+            await getSmartHomeDeviceAPI().toggleConfigurationStatus(deviceId, configId)
+            setActiveConfigId(configId)
+        } catch (error) {
+            console.error("Failed to toggle configuration status:", error)
+            // Optionally, add error handling here (e.g., show an error message to the user)
+        }
     }
 
     return (
@@ -47,47 +48,15 @@ export function ConfigurationList({
             </TableHeader>
             <TableBody>
                 {configurations.map((config) => (
-                    <TableRow
+                    <ConfigurationListItem
                         key={config.id}
-                        className="bg-surface-mixed cursor-pointer"
-                        onClick={() => navigate(`/devices/${deviceId}/configurations/${config.id}`)}
-                    >
-                        <TableCell className="font-medium">{config.name}</TableCell>
-                        <TableCell>
-                            <Button
-                                variant={config.active ? "default" : "secondary"}
-                                size="sm"
-                                // TODO: implement toggle
-                                onClick={() => toggleConfigurationActive(config.id)}
-                            >
-                                {config.active ? "Active" : "Inactive"}
-                            </Button>
-                        </TableCell>
-                        <TableCell className="text-right">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                        <span className="sr-only">Open menu</span>
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => navigate(`/devices/${deviceId}/configurations/${config.id}`)}>
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        <span>View</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onUpdateConfiguration(config.id)}>
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        <span>Update</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onDeleteConfiguration(config.id)}>
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        <span>Delete</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
+                        config={config}
+                        deviceId={deviceId}
+                        isActive={config.id === activeConfigId}
+                        onToggle={() => handleToggle(config.id)}
+                        onUpdateConfiguration={onUpdateConfiguration}
+                        onDeleteConfiguration={onDeleteConfiguration}
+                    />
                 ))}
             </TableBody>
         </Table>

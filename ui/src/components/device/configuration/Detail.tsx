@@ -16,6 +16,7 @@ export function ConfigurationDetail() {
     const [configuration, setConfiguration] = useState<Configuration>({} as Configuration)
     const [device, setDevice] = useState<Device>({} as Device)
     const [error, setError] = useState<string>('')
+    // TODO: trigger von dialog nutzen, damit die ConfigurationDetail nicht jedes mal neugealdenge wird
     const [isModalOpen, setIsModalOpen] = useState(false)
 
     useEffect(() => {

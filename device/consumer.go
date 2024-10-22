@@ -2,29 +2,28 @@ package device
 
 import (
 	"encoding/json"
-	"log/slog"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/rs/zerolog/log"
 )
 
 type Consumer struct {
-	logger     *slog.Logger
 	repository Repository
 	client     mqtt.Client
 }
 
-func NewConsumer(logger *slog.Logger, repository Repository, client mqtt.Client) *Consumer {
-	return &Consumer{logger: logger, repository: repository, client: client}
+func NewConsumer(repository Repository, client mqtt.Client) *Consumer {
+	return &Consumer{repository: repository, client: client}
 }
 
 func (c *Consumer) Start() {
 	if token := c.client.Connect(); token.Wait() && token.Error() != nil {
-		c.logger.Error("onnecting to MQTT broker %w", token.Error())
+		log.Error().Err(token.Error()).Msg("connecting to MQTT broker")
 		return
 	}
 
 	if token := c.client.Subscribe("zigbee2mqtt/bridge/devices", 0, c.messageHandler); token.Wait() && token.Error() != nil {
-		c.logger.Error("subscribing to topic %w", token.Error())
+		log.Error().Err(token.Error()).Msg("subscribing to MQTT topic")
 		return
 	}
 }
@@ -38,7 +37,7 @@ func (c *Consumer) messageHandler(client mqtt.Client, msg mqtt.Message) {
 	var deviceDTOs []deviceDTO
 
 	if err := json.Unmarshal(msg.Payload(), &deviceDTOs); err != nil {
-		c.logger.Error("unmarshalling message payload %w", err)
+		log.Error().Err(err).Msg("unmarshal devices")
 		return
 	}
 
@@ -50,7 +49,7 @@ func (c *Consumer) messageHandler(client mqtt.Client, msg mqtt.Message) {
 			Status: "idle",
 		})
 		if err != nil {
-			c.logger.Error("creating device %w", err)
+			log.Error().Err(err).Msg("creating device")
 			return
 		}
 	}

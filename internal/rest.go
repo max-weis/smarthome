@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/ziflex/lecho"
 )
 
 // Custom errors
@@ -98,5 +100,8 @@ func NewEchoServer() *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.CORS())
 	e.Use(errorHandler)
+
+	e.Logger = lecho.New(os.Stdout)
+
 	return e
 }
