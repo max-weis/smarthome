@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -12,6 +14,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// handle ui
+	ctx.echo.Static("/", "ui/dist")
 
 	var wg sync.WaitGroup
 
