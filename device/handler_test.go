@@ -2,6 +2,7 @@ package device
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -33,6 +34,126 @@ func (suite *DeviceTestSuite) SetupTest() {
 	suite.repository = NewRepository(db)
 
 	_ = NewHandler(suite.echo, suite.repository, nil)
+}
+
+func (suite *DeviceTestSuite) TestGetDevices() {
+	suite.newRequest("GET", "/devices", nil)
+	suite.Require().Equal(http.StatusOK, suite.responseRecorder.Code)
+
+	var devices []Device
+	suite.mapFromResp(&devices)
+
+	suite.Require().Equal([]Device{
+		{
+			Id:     "1",
+			Name:   "Living Room Light",
+			Type:   "light",
+			Status: "on",
+		},
+		{
+			Id:     "2",
+			Name:   "Bedroom Light",
+			Type:   "light",
+			Status: "off",
+		},
+		{
+			Id:     "3",
+			Name:   "Kitchen Light",
+			Type:   "light",
+			Status: "idle",
+		},
+		{
+			Id:     "4",
+			Name:   "Bedroom Thermostat",
+			Type:   "thermostat",
+			Status: "idle",
+		},
+		{
+			Id:     "5",
+			Name:   "Kitchen Thermostat",
+			Type:   "thermostat",
+			Status: "idle",
+		},
+	}, devices)
+}
+
+func (suite *DeviceTestSuite) TestGetDevice() {
+	suite.newRequest("GET", "/device/1", nil)
+	suite.Require().Equal(http.StatusOK, suite.responseRecorder.Code)
+
+	var device Device
+	suite.mapFromResp(&device)
+
+	suite.Require().Equal(Device{
+		Id:     "1",
+		Name:   "Living Room Light",
+		Type:   "light",
+		Status: "on",
+	}, device)
+}
+
+func (suite *DeviceTestSuite) TestGetDeviceConfigurations() {
+	suite.newRequest("GET", "/device/1/configurations", nil)
+	suite.Require().Equal(http.StatusOK, suite.responseRecorder.Code)
+
+	var configurations []ConfigurationListItem
+	suite.mapFromResp(&configurations)
+
+	suite.Require().Equal([]ConfigurationListItem{
+		{
+			Id:     "1",
+			Name:   "Daymode",
+			Active: true,
+		},
+		{
+			Id:   "2",
+			Name: "Nightmode",
+		},
+	}, configurations)
+}
+
+func (suite *DeviceTestSuite) TestCreateConfiguration() {
+	configuration := Configuration{
+		Name: "Test Configuration",
+		Data: &map[string]any{"test": true},
+	}
+	suite.newRequest("POST", "/device/1/configurations", mapToReq(configuration))
+	suite.Require().Equal(http.StatusCreated, suite.responseRecorder.Code)
+
+	var newConfiguration Configuration
+	suite.mapFromResp(&newConfiguration)
+
+	suite.Require().NotEmpty(newConfiguration.Id)
+	suite.Require().Equal(configuration.Name, newConfiguration.Name)
+	suite.Require().Equal(configuration.Data, newConfiguration.Data)
+}
+
+func (suite *DeviceTestSuite) TestGetConfiguration() {
+	suite.newRequest("GET", "/device/1/configuration/1", nil)
+	suite.Require().Equal(http.StatusOK, suite.responseRecorder.Code)
+
+	var configuration Configuration
+	suite.mapFromResp(&configuration)
+
+	suite.Require().Equal("1", configuration.Id)
+	suite.Require().Equal("Daymode", configuration.Name)
+	suite.Require().True(configuration.Active)
+	suite.Require().Equal(map[string]any{"brightness": float64(100)}, *configuration.Data)
+}
+
+func (suite *DeviceTestSuite) TestUpdateConfiguration() {
+	configuration := Configuration{
+		Name: "Test Configuration",
+		Data: &map[string]any{"test": true},
+	}
+	suite.newRequest("PUT", "/device/1/configuration/1", mapToReq(configuration))
+	suite.Require().Equal(http.StatusOK, suite.responseRecorder.Code)
+
+	var updatedConfiguration Configuration
+	suite.mapFromResp(&updatedConfiguration)
+
+	suite.Require().Equal(configuration.Name, updatedConfiguration.Name)
+	suite.Require().Equal(configuration.Data, updatedConfiguration.Data)
 }
 
 func (suite *DeviceTestSuite) TestToggleConfigurationStatus() {
@@ -70,4 +191,20 @@ func (suite *DeviceTestSuite) newRequest(method string, route string, requestBod
 	request.Header.Set("content-type", "application/json; charset=utf-8")
 	suite.responseRecorder = httptest.NewRecorder()
 	suite.echo.ServeHTTP(suite.responseRecorder, request)
+}
+
+func mapToReq(v any) []byte {
+	jsonObject, err := json.Marshal(v)
+	if err != nil {
+		return []byte("")
+	}
+
+	return append(jsonObject, 10)
+}
+
+func (suite *DeviceTestSuite) mapFromResp(v any) {
+	if err := json.Unmarshal(suite.responseRecorder.Body.Bytes(), v); err != nil {
+		suite.T().Log(err)
+		suite.T().Fatal()
+	}
 }
