@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 
@@ -33,7 +34,10 @@ func (suite *DeviceTestSuite) SetupTest() {
 	suite.db = db
 	suite.repository = NewRepository(db)
 
-	_ = NewHandler(suite.echo, suite.repository, nil)
+	producer := &mockProducer{}
+	producer.On("PublishConfiguration", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	_ = NewHandler(suite.echo, suite.repository, producer)
 }
 
 func (suite *DeviceTestSuite) TestGetDevices() {
@@ -207,4 +211,13 @@ func (suite *DeviceTestSuite) mapFromResp(v any) {
 		suite.T().Log(err)
 		suite.T().Fatal()
 	}
+}
+
+type mockProducer struct {
+	mock.Mock
+}
+
+func (m *mockProducer) PublishConfiguration(deviceId string, configId string, configData map[string]any) error {
+	args := m.Called(deviceId, configId, configData)
+	return args.Error(0)
 }

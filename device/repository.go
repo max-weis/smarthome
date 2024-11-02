@@ -133,10 +133,20 @@ func (r *Repository) SetAllInactive(deviceId string) error {
 		Update("active", false).Error
 }
 
-func (r *Repository) ToggleConfigurationStatus(configId string) error {
-	result := r.db.Model(&configurationEntity{}).
-		Where("id = ?", configId).
-		Update("active", gorm.Expr("NOT active"))
-
-	return result.Error
+func (r *Repository) ToggleConfigurationStatus(configId string) (bool, error) {
+    var config configurationEntity
+    
+    // First update the status
+    if err := r.db.Model(&configurationEntity{}).
+        Where("id = ?", configId).
+        Update("active", gorm.Expr("NOT active")).Error; err != nil {
+        return false, err
+    }
+    
+    // Then fetch the updated record to get the new status
+    if err := r.db.Where("id = ?", configId).First(&config).Error; err != nil {
+        return false, err
+    }
+    
+    return config.Active, nil
 }

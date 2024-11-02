@@ -2,27 +2,28 @@ package device
 
 import (
 	"encoding/json"
+	"fmt"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog/log"
 )
 
-type Producer struct {
+type mqttProducer struct {
 	client mqtt.Client
 }
 
-func NewProducer(client mqtt.Client) *Producer {
-	return &Producer{client: client}
+func NewMQTTProducer(client mqtt.Client) Producer {
+	return &mqttProducer{client: client}
 }
 
-func (p *Producer) PublishConfiguration(deviceId string, configId string, configData map[string]any) error {
+func (p *mqttProducer) PublishConfiguration(deviceId string, configId string, configData map[string]any) error {
 	data, err := json.Marshal(configData)
 	if err != nil {
 		log.Error().Err(err).Msg("marshalling configuration data")
 		return err
 	}
 
-	token := p.client.Publish("zigbee2mqtt/%s/set", 0, false, data)
+	token := p.client.Publish(fmt.Sprintf("zigbee2mqtt/%s/set", deviceId), 0, false, data)
 	if token.Wait() && token.Error() != nil {
 		log.Error().Err(token.Error()).Msg("publishing configuration")
 		return token.Error()

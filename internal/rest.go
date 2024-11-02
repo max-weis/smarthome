@@ -99,6 +99,7 @@ func errorHandler(next echo.HandlerFunc) echo.HandlerFunc {
 func NewEchoServer() *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.CORS())
+	e.Use(middleware.Logger())
 	e.Use(errorHandler)
 
 	e.Logger = lecho.New(os.Stdout)

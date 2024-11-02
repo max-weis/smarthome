@@ -13,13 +13,19 @@ import (
 	"github.com/max-weis/smarthome/internal"
 )
 
-type Handler struct {
-	e          *echo.Echo
-	repository Repository
-	producer   *Producer
-}
+type (
+	Handler struct {
+		e          *echo.Echo
+		repository Repository
+		producer   Producer
+	}
 
-func NewHandler(e *echo.Echo, repository Repository, producer *Producer) ServerInterface {
+	Producer interface {
+		PublishConfiguration(deviceId string, configId string, configData map[string]any) error
+	}
+)
+
+func NewHandler(e *echo.Echo, repository Repository, producer Producer) ServerInterface {
 	handler := &Handler{
 		e:          e,
 		repository: repository,
@@ -233,8 +239,26 @@ func (h *Handler) ToggleConfigurationStatus(ctx echo.Context, id string, configu
 		return err
 	}
 
-	if err := h.repository.ToggleConfigurationStatus(configurationId); err != nil {
+	active, err := h.repository.ToggleConfigurationStatus(configurationId)
+	if err != nil {
 		return err
+	}
+
+	// publish configuration if active
+	if active {
+		configuration, err := h.repository.GetConfiguration(configurationId)
+		if err != nil {
+			return err
+		}
+
+		config, err := mapConfiguration(configuration)
+		if err != nil {
+			return err
+		}
+
+		if err := h.producer.PublishConfiguration(id, configurationId, *config.Data); err != nil {
+			return err
+		}
 	}
 
 	return ctx.NoContent(http.StatusNoContent)

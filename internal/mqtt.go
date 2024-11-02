@@ -7,5 +7,11 @@ func NewMqttClient() mqtt.Client {
 	opts.AddBroker("tcp://raspberrypi:1883")
 	opts.SetClientID("smarthome-client")
 
-	return mqtt.NewClient(opts)
+	client := mqtt.NewClient(opts)
+
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+
+	return client
 }

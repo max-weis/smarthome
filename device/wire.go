@@ -6,5 +6,5 @@ var Set = wire.NewSet(
 	NewRepository,
 	NewHandler,
 	NewConsumer,
-	NewProducer,
+	NewMQTTProducer,
 )
